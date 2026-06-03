@@ -11,6 +11,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import LoadingState from "@/components/shared/LoadingState";
 import EmptyState from "@/components/shared/EmptyState";
 import { formatDate } from "@/lib/utils/format";
+import { isSameAddress } from "@/lib/utils/address";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -26,10 +27,9 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const all = await getAllEvents();
-      // Filter to events created by this wallet (case-insensitive)
-      const mine = all.filter(
-        (e) => e.organiser.toLowerCase() === address.toLowerCase()
-      );
+      // Filter to events created by this wallet. Use EIP-55-normalised compare
+      // so we match regardless of case.
+      const mine = all.filter((e) => isSameAddress(e.organiser, address));
       setEvents(mine);
 
       // Fetch all submissions for each organiser event

@@ -24,6 +24,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
 import { shortenAddress, formatTimestamp } from "@/lib/utils/format";
+import { toChecksum, isSameAddress } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
 /**
@@ -55,8 +56,7 @@ export default function PlatformDashboardPage() {
     load();
   }, []);
 
-  const isOwner =
-    !!address && !!owner && address.toLowerCase() === owner.toLowerCase();
+  const isOwner = isSameAddress(address, owner);
 
   // Fetch the heavier data only once we know we're the platform owner
   useEffect(() => {
@@ -75,7 +75,9 @@ export default function PlatformDashboardPage() {
 
         const eventsData = await Promise.all(eventIds.map((id) => getEvent(id).catch(() => null)));
         const badgesData = await Promise.all(badgeIds.map((id) => getBadge(id).catch(() => null)));
-        const usersData = await Promise.all(userAddrs.map((a) => getUserProfile(a).catch(() => null)));
+        const usersData = await Promise.all(
+          userAddrs.map((a) => getUserProfile(toChecksum(a)).catch(() => null))
+        );
 
         if (cancelled) return;
         setEvents(eventsData.filter(Boolean) as GenProofEvent[]);
@@ -242,7 +244,7 @@ export default function PlatformDashboardPage() {
               {users.map((u) => (
                 <Link
                   key={u.wallet}
-                  href={`/profile/${u.wallet}`}
+                  href={`/profile/${toChecksum(u.wallet)}`}
                   className="flex items-center justify-between p-4 hover:bg-background/30 transition-colors"
                 >
                   <div className="min-w-0">

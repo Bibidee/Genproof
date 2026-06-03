@@ -7,8 +7,11 @@ import {
   clearClient,
   generatePrivateKey,
 } from "@/lib/genlayer/client";
+import { ensureStudionet } from "@/lib/genlayer/network";
+import { toChecksum } from "@/lib/utils/address";
 
 type WalletContextType = {
+  /** Connected wallet, ALWAYS in EIP-55 checksummed form (or null) */
   address: string | null;
   connecting: boolean;
   connect: () => Promise<void>;
@@ -34,7 +37,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const account = setClientAccount(stored as `0x${string}`);
-        setAddress(account.address);
+        setAddress(toChecksum(account.address));
       }
     } catch {
       // Ignore — browser may not have localStorage in some SSR contexts
@@ -44,7 +47,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const connect = useCallback(async () => {
     setConnecting(true);
     try {
-      // ── Option A: Injected wallet (MetaMask, Brave, etc.) ──────────────────
+      // ── Option A: Injected wallet (MetaMask, Brave, Rabby) ────────────────
       if (
         typeof window !== "undefined" &&
         (window as unknown as { ethereum?: unknown }).ethereum
@@ -57,10 +60,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           ).ethereum;
           const accounts = await eth.request({ method: "eth_requestAccounts" });
           if (accounts[0]) {
-            // Configure the genlayer-js client to use window.ethereum for signing
-            setClientFromAddress(accounts[0] as `0x${string}`);
-            setAddress(accounts[0]);
-            // Don't store a private key — injected wallet manages keys itself
+            // Force the wallet onto GenLayer Studionet so writes don't go to
+            // the wrong chain (Sepolia/mainnet/etc.). Non-fatal if user rejects.
+            await ensureStudionet();
+
+            // Always store the checksummed form so it matches what the
+            // contract stored via gl.message.sender_address.
+            const checksummed = toChecksum(accounts[0]) as `0x${string}`;
+            setClientFromAddress(checksummed);
+            setAddress(checksummed);
             return;
           }
         } catch {
@@ -68,11 +76,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // ── Option B: Local simulator account (no MetaMask) ───────────────────
+      // ── Option B: Local simulator account (no MetaMask) ──────────────────
       const pk = generatePrivateKey();
       const account = setClientAccount(pk);
       localStorage.setItem(STORAGE_KEY, pk);
-      setAddress(account.address);
+      setAddress(toChecksum(account.address));
     } catch (e) {
       console.error("Wallet connect error:", e);
     } finally {

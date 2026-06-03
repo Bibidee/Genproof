@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getUserProfile, getUserBadges, getBadge } from "@/lib/genlayer/reads";
 import type { UserProfile } from "@/lib/types/profile";
@@ -11,10 +11,14 @@ import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import EmptyState from "@/components/shared/EmptyState";
 import Link from "next/link";
+import { toChecksum } from "@/lib/utils/address";
 
 export default function ProfilePage() {
   const params = useParams();
-  const wallet = params.wallet as string;
+  // EIP-55 normalise the URL wallet param — the contract stores keys under the
+  // checksummed form and lookup is case-sensitive (see WalletContext for the
+  // full explanation).
+  const wallet = useMemo(() => toChecksum(params.wallet as string), [params.wallet]);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);

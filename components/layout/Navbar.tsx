@@ -6,6 +6,7 @@ import { Shield, Menu, X, ShieldCheck } from "lucide-react";
 import { useWallet } from "@/lib/context/WalletContext";
 import { shortenAddress } from "@/lib/utils/format";
 import { getPlatformOwner } from "@/lib/genlayer/reads";
+import { isSameAddress, toChecksum } from "@/lib/utils/address";
 
 export default function Navbar() {
   const { address, connecting, connect, disconnect } = useWallet();
@@ -25,8 +26,8 @@ export default function Navbar() {
     };
   }, []);
 
-  const isPlatformOwner =
-    !!address && !!platformOwner && address.toLowerCase() === platformOwner.toLowerCase();
+  const isPlatformOwner = isSameAddress(address, platformOwner);
+  const profileHref = address ? `/profile/${toChecksum(address)}` : "/";
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -50,7 +51,7 @@ export default function Navbar() {
           {address && (
             <>
               <Link
-                href={`/profile/${address}`}
+                href={profileHref}
                 className="text-sm text-muted hover:text-gp-text transition-colors"
               >
                 My Profile
@@ -115,7 +116,7 @@ export default function Navbar() {
           <Link href="/create" className="block text-sm text-muted hover:text-gp-text" onClick={() => setMobileOpen(false)}>Create Event</Link>
           {address && (
             <>
-              <Link href={`/profile/${address}`} className="block text-sm text-muted hover:text-gp-text" onClick={() => setMobileOpen(false)}>My Profile</Link>
+              <Link href={profileHref} className="block text-sm text-muted hover:text-gp-text" onClick={() => setMobileOpen(false)}>My Profile</Link>
               <Link href="/dashboard" className="block text-sm text-muted hover:text-gp-text" onClick={() => setMobileOpen(false)}>Dashboard</Link>
               {isPlatformOwner && (
                 <Link href="/platform" className="block text-sm text-primary" onClick={() => setMobileOpen(false)}>

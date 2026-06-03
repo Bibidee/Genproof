@@ -13,6 +13,7 @@ import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
 import { formatDate, shortenAddress } from "@/lib/utils/format";
+import { toChecksum } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
 export default function EventPage() {
@@ -149,7 +150,7 @@ export default function EventPage() {
                   </div>
                   <div className="min-w-0">
                     <Link
-                      href={`/profile/${b.owner}`}
+                      href={`/profile/${toChecksum(b.owner)}`}
                       className="text-sm font-mono text-gp-text hover:text-primary truncate block transition-colors"
                     >
                       {shortenAddress(b.owner)}

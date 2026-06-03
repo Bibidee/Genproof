@@ -9,6 +9,7 @@ import ScoreMeter from "@/components/shared/ScoreMeter";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
 import RiskFlagList from "@/components/shared/RiskFlagList";
 import { useWallet } from "@/lib/context/WalletContext";
+import { toChecksum } from "@/lib/utils/address";
 
 type Props = {
   submission: Submission;
@@ -85,7 +86,7 @@ export default function ReviewResultCard({ submission, onRefresh }: Props) {
     try {
       await issueBadge(submission.submission_id);
       onRefresh();
-      if (address) router.push(`/profile/${address}`);
+      if (address) router.push(`/profile/${toChecksum(address)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -184,7 +185,7 @@ export default function ReviewResultCard({ submission, onRefresh }: Props) {
             </div>
             {address && (
               <button
-                onClick={() => router.push(`/profile/${address}`)}
+                onClick={() => router.push(`/profile/${toChecksum(address)}`)}
                 className="flex items-center gap-1 text-xs text-primary hover:underline"
               >
                 View on profile

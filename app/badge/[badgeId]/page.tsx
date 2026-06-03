@@ -12,6 +12,7 @@ import ErrorState from "@/components/shared/ErrorState";
 import ScoreMeter from "@/components/shared/ScoreMeter";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
 import { shortenAddress, formatTimestamp, formatDate } from "@/lib/utils/format";
+import { toChecksum } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
 /**
@@ -110,7 +111,7 @@ export default function PublicBadgePage() {
         <div className="flex items-center justify-between">
           <code className="text-sm font-mono text-gp-text break-all">{badge.owner}</code>
           <Link
-            href={`/profile/${badge.owner}`}
+            href={`/profile/${toChecksum(badge.owner)}`}
             className="shrink-0 ml-3 flex items-center gap-1 text-xs text-primary hover:underline"
           >
             View profile <ExternalLink className="h-3 w-3" />
