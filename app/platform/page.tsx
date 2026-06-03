@@ -23,7 +23,7 @@ import ErrorState from "@/components/shared/ErrorState";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
-import { shortenAddress, formatTimestamp } from "@/lib/utils/format";
+import { shortenAddress, formatChainTimestamp } from "@/lib/utils/format";
 import { toChecksum, isSameAddress } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
@@ -256,7 +256,7 @@ export default function PlatformDashboardPage() {
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-bold text-primary">{u.reputation_points} pts</p>
                     {u.last_updated && (
-                      <p className="text-xs text-muted">{formatTimestamp(u.last_updated)}</p>
+                      <p className="text-xs text-muted">{formatChainTimestamp(u.last_updated)}</p>
                     )}
                   </div>
                 </Link>

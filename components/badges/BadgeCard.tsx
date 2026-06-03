@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Award, ShieldCheck, ExternalLink } from "lucide-react";
 import type { Badge } from "@/lib/types/badge";
-import { formatTimestamp } from "@/lib/utils/format";
+import { formatChainDate } from "@/lib/utils/format";
 import BadgeLevelTag from "./BadgeLevelTag";
 import ScoreMeter from "@/components/shared/ScoreMeter";
 
@@ -38,7 +38,7 @@ export default function BadgeCard({ badge }: Props) {
       )}
 
       <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted">
-        <span>Issued {formatTimestamp(badge.issued_at)}</span>
+        <span>Issued {formatChainDate(badge.issued_at)}</span>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 text-success">
             <ShieldCheck className="h-3.5 w-3.5" />

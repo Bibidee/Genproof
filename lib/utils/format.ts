@@ -76,8 +76,8 @@ export function normaliseTimestampToMs(
 }
 
 /**
- * Format a chain timestamp for display as a date only ("3 Jun 2026").
- * Returns "—" for empty/invalid.
+ * Format a USER-SUPPLIED date (event start/end/claim_deadline) — these come
+ * from the create form as real Unix seconds. Returns "—" for empty/invalid.
  */
 export function formatDate(value: string | number | undefined | null): string {
   const ms = normaliseTimestampToMs(value);
@@ -92,14 +92,54 @@ export function formatDate(value: string | number | undefined | null): string {
 }
 
 /**
- * Format a chain timestamp for display including hour:minute ("3 Jun 2026, 14:35").
- * Returns "—" for empty/invalid.
+ * Format a USER-SUPPLIED timestamp including hour:minute. Returns "—" for
+ * empty/invalid.
  */
 export function formatTimestamp(value: string | number | undefined | null): string {
   const ms = normaliseTimestampToMs(value);
   if (!ms) return "—";
   const d = new Date(ms);
   if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Format a CHAIN-WRITTEN timestamp (issued_at, submitted_at, reviewed_at,
+ * created_at, closed_at) — these come from now_timestamp() in the contract,
+ * which can fall back to "0" on the GenVM runtime when gl.block.timestamp
+ * is unavailable.
+ *
+ * Returns "Unknown" for empty / "0" / invalid input — never lies with a
+ * placeholder year like 1 Jan 2000.
+ */
+export function formatChainDate(value: string | number | undefined | null): string {
+  const ms = normaliseTimestampToMs(value);
+  if (!ms) return "Unknown";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "Unknown";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/**
+ * Same as formatChainDate but includes hour:minute. For chain-issued
+ * timestamps the wall-clock precision is usually not meaningful, but kept
+ * separate so we can swap the granularity per-call.
+ */
+export function formatChainTimestamp(value: string | number | undefined | null): string {
+  const ms = normaliseTimestampToMs(value);
+  if (!ms) return "Unknown";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "Unknown";
   return d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",

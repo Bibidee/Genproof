@@ -11,7 +11,7 @@ import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import ScoreMeter from "@/components/shared/ScoreMeter";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
-import { shortenAddress, formatTimestamp, formatDate } from "@/lib/utils/format";
+import { shortenAddress, formatDate, formatChainDate } from "@/lib/utils/format";
 import { toChecksum } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
@@ -33,10 +33,12 @@ export default function PublicBadgePage() {
     async function load() {
       try {
         const b = await getBadge(badgeId);
-        // Diagnostic — confirms what unit GenLayer is returning for chain timestamps
-        // (seconds / ms / micros / nanos). Logged once per page mount.
+        // Temporary diagnostic — dump the full badge so we can see every field
+        // the contract returned. Helps confirm whether issued_at is genuinely
+        // "0" on chain, missing, or buried under a different key.
         if (typeof window !== "undefined") {
-          console.log("[GenProof] raw badge.issued_at:", b.issued_at, "len:", String(b.issued_at).length);
+          console.log("[GenProof] raw badge:", b);
+          console.log("[GenProof] raw issued_at:", b?.issued_at, "type:", typeof b?.issued_at);
         }
         setBadge(b);
         try {
@@ -154,7 +156,7 @@ export default function PublicBadgePage() {
             </div>
             <div>
               <span className="block">Issued</span>
-              <span className="text-gp-text">{formatTimestamp(badge.issued_at)}</span>
+              <span className="text-gp-text">{formatChainDate(badge.issued_at)}</span>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Submission } from "@/lib/types/submission";
 import { manualReview } from "@/lib/genlayer/writes";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { formatTimestamp } from "@/lib/utils/format";
+import { formatChainTimestamp } from "@/lib/utils/format";
 import { MANUAL_BADGE_LEVELS } from "@/lib/utils/constants";
 
 type Props = {
@@ -82,7 +82,7 @@ function ManualReviewItem({
         <div className="min-w-0">
           <p className="text-sm font-medium text-gp-text truncate">{submission.submission_id}</p>
           <p className="text-xs text-muted font-mono">{submission.attendee.slice(0, 18)}…</p>
-          <p className="text-xs text-muted">{formatTimestamp(submission.submitted_at)}</p>
+          <p className="text-xs text-muted">{formatChainTimestamp(submission.submitted_at)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <StatusBadge status={submission.status} />
