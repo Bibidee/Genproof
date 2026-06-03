@@ -33,6 +33,11 @@ export default function PublicBadgePage() {
     async function load() {
       try {
         const b = await getBadge(badgeId);
+        // Diagnostic — confirms what unit GenLayer is returning for chain timestamps
+        // (seconds / ms / micros / nanos). Logged once per page mount.
+        if (typeof window !== "undefined") {
+          console.log("[GenProof] raw badge.issued_at:", b.issued_at, "len:", String(b.issued_at).length);
+        }
         setBadge(b);
         try {
           setEvent(await getEvent(b.event_id));

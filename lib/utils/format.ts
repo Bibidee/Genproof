@@ -31,47 +31,75 @@ export function dateTimeInputToUnix(value: string): string {
  */
 export function unixToDateInput(ts: string): string {
   if (!ts) return "";
-  const n = Number(ts);
-  if (!Number.isFinite(n) || n <= 0) return "";
-  const d = new Date(n * 1000);
+  const ms = normaliseTimestampToMs(ts);
+  if (!ms) return "";
+  const d = new Date(ms);
   return d.toISOString().slice(0, 10);
 }
 
 /**
- * Format any timestamp-ish input (Unix string, Unix int, or ISO string) for display.
- * Returns "—" for empty/invalid.
+ * Normalise ANY chain timestamp value (string OR number) to milliseconds since epoch.
+ *
+ * GenLayer's `gl.block.timestamp` returns an integer whose unit varies by runtime:
+ * seconds (10 digits), milliseconds (13 digits), microseconds (16 digits), or
+ * nanoseconds (19+ digits). Passing the raw string to `new Date()` is unsafe:
+ * `new Date("0")` → "Jan 1 2000" because Date parses it as a year string, and
+ * very large numeric strings overflow into bogus dates.
+ *
+ * Use this for issued_at, created_at, submitted_at, reviewed_at, closed_at,
+ * start_date, end_date, claim_deadline — anything coming back from the contract.
+ *
+ * Returns 0 for empty, "0", or unparseable input.
  */
-export function formatDate(input: string | number | undefined | null): string {
-  if (input === undefined || input === null || input === "") return "—";
-  let d: Date;
-  if (typeof input === "number") {
-    d = new Date(input * 1000);
-  } else {
-    const n = Number(input);
-    if (Number.isFinite(n) && n > 0 && /^\d+$/.test(input.trim())) {
-      d = new Date(n * 1000);
-    } else {
-      d = new Date(input);
-    }
-  }
-  if (isNaN(d.getTime())) return String(input);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+export function normaliseTimestampToMs(
+  value: string | number | undefined | null
+): number {
+  if (value === undefined || value === null) return 0;
+
+  const raw = String(value).trim();
+  if (!raw || raw === "0") return 0;
+
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 0;
+
+  // Unix seconds: 10 digits
+  if (raw.length <= 10) return n * 1000;
+
+  // Unix milliseconds: 13 digits
+  if (raw.length <= 13) return n;
+
+  // Microseconds: 16 digits
+  if (raw.length <= 16) return Math.floor(n / 1000);
+
+  // Nanoseconds or larger
+  return Math.floor(n / 1_000_000);
 }
 
-export function formatTimestamp(ts: string | number | undefined | null): string {
-  if (ts === undefined || ts === null || ts === "") return "—";
-  let d: Date;
-  if (typeof ts === "number") {
-    d = new Date(ts * 1000);
-  } else {
-    const n = Number(ts);
-    if (Number.isFinite(n) && n > 0 && /^\d+$/.test(ts.trim())) {
-      d = new Date(n * 1000);
-    } else {
-      d = new Date(ts);
-    }
-  }
-  if (isNaN(d.getTime())) return String(ts);
+/**
+ * Format a chain timestamp for display as a date only ("3 Jun 2026").
+ * Returns "—" for empty/invalid.
+ */
+export function formatDate(value: string | number | undefined | null): string {
+  const ms = normaliseTimestampToMs(value);
+  if (!ms) return "—";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/**
+ * Format a chain timestamp for display including hour:minute ("3 Jun 2026, 14:35").
+ * Returns "—" for empty/invalid.
+ */
+export function formatTimestamp(value: string | number | undefined | null): string {
+  const ms = normaliseTimestampToMs(value);
+  if (!ms) return "—";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
