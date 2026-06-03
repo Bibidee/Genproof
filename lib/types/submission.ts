@@ -18,6 +18,12 @@ export type Submission = {
   verification_summary: string;
   /** Set after issue_badge is called — empty string means badge not yet issued */
   badge_id: string;
+  /** Unix seconds */
   submitted_at: string;
+  /** Unix seconds, empty until reviewed */
   reviewed_at: string;
+  /** ISO 8601 (v2 contract) */
+  submitted_at_iso?: string;
+  /** ISO 8601 (v2 contract) */
+  reviewed_at_iso?: string;
 };

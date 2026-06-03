@@ -8,7 +8,7 @@ import ReviewResultCard from "@/components/submissions/ReviewResultCard";
 import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import Link from "next/link";
-import { formatChainTimestamp } from "@/lib/utils/format";
+import { formatChainTimestamp, pickChainDate } from "@/lib/utils/format";
 
 export default function ReviewPage() {
   const params = useParams();
@@ -55,7 +55,7 @@ export default function ReviewPage() {
       <div>
         <h1 className="text-2xl font-bold text-gp-text">Proof Review</h1>
         <p className="mt-1 text-sm text-muted">
-          Submitted {formatChainTimestamp(submission.submitted_at)}
+          Submitted {formatChainTimestamp(pickChainDate(submission.submitted_at_iso, submission.submitted_at))}
         </p>
       </div>
 

@@ -4,8 +4,11 @@ export type GenProofEvent = {
   title: string;
   description: string;
   event_type: string;
+  /** Unix seconds (user-supplied). */
   start_date: string;
+  /** Unix seconds (user-supplied). */
   end_date: string;
+  /** Unix seconds (user-supplied). */
   claim_deadline: string;
   badge_name: string;
   badge_image: string;
@@ -21,6 +24,12 @@ export type GenProofEvent = {
   total_approved: number;
   total_rejected: number;
   total_manual_review: number;
+  /** Unix seconds */
   created_at: string;
+  /** Unix seconds (empty until closed) */
   closed_at: string;
+  /** ISO 8601 (v2 contract) */
+  created_at_iso?: string;
+  /** ISO 8601 (v2 contract) */
+  closed_at_iso?: string;
 };

@@ -11,5 +11,8 @@ export type Badge = {
   verification_summary: string;
   proof_hash: string;
   soulbound: boolean;
+  /** Unix seconds. Use for sorting/comparison. */
   issued_at: string;
+  /** ISO 8601. Use for display. Added by the v2 contract. Optional for backwards-compat. */
+  issued_at_iso?: string;
 };

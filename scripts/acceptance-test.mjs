@@ -8,7 +8,7 @@ import { createClient, createAccount, generatePrivateKey } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { createHash } from "node:crypto";
 
-const CONTRACT_ADDRESS = "0x4Cbf3Cd7713F3AA23a21E6838dBB00E5C30d1687";
+const CONTRACT_ADDRESS = "0xE6cbFe527Ae3dCD9f771AB1917cCbC03F7589cB6";
 const RPC = process.env.NEXT_PUBLIC_GENLAYER_RPC || "https://studio.genlayer.com/api";
 
 // ─────────────────────────────────────────────────────────────────────────────

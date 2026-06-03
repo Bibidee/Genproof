@@ -11,7 +11,7 @@ import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import ScoreMeter from "@/components/shared/ScoreMeter";
 import BadgeLevelTag from "@/components/badges/BadgeLevelTag";
-import { shortenAddress, formatDate, formatChainDate } from "@/lib/utils/format";
+import { shortenAddress, formatDate, formatChainDate, pickChainDate } from "@/lib/utils/format";
 import { toChecksum } from "@/lib/utils/address";
 import { EVENT_TYPE_LABELS } from "@/lib/utils/constants";
 
@@ -156,7 +156,9 @@ export default function PublicBadgePage() {
             </div>
             <div>
               <span className="block">Issued</span>
-              <span className="text-gp-text">{formatChainDate(badge.issued_at)}</span>
+              <span className="text-gp-text">
+                {formatChainDate(pickChainDate(badge.issued_at_iso, badge.issued_at))}
+              </span>
             </div>
           </div>
         </div>

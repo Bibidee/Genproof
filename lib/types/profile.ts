@@ -11,5 +11,8 @@ export type UserProfile = {
   average_score: number;
   reputation_points: number;
   reputation_level: string;
+  /** Unix seconds */
   last_updated: string;
+  /** ISO 8601 (v2 contract) */
+  last_updated_iso?: string;
 };

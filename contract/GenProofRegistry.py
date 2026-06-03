@@ -4,6 +4,8 @@
 from genlayer import *
 import json
 import hashlib
+import time
+from datetime import datetime, timezone
 
 
 # ---------------------------------------------------------------------------
@@ -89,18 +91,79 @@ def to_json(value) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
-def now_timestamp() -> str:
+def parse_iso_to_unix_seconds(value: str) -> int:
     try:
-        return str(gl.block.timestamp)
+        raw = str(value).strip()
+        if raw == "":
+            return 0
+
+        # Support common ISO UTC format ending with Z.
+        if raw.endswith("Z"):
+            raw = raw[:-1] + "+00:00"
+
+        dt = datetime.fromisoformat(raw)
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return int(dt.timestamp())
     except Exception:
-        return "0"
+        return 0
+
+
+def tx_datetime_iso() -> str:
+    """
+    Preferred timestamp source for GenLayer transaction context.
+    gl.message_raw["datetime"] is the transaction datetime provided by the runtime.
+    """
+    try:
+        raw = str(gl.message_raw["datetime"]).strip()
+        if raw != "":
+            return raw
+    except Exception:
+        pass
+
+    try:
+        return datetime.now(timezone.utc).isoformat()
+    except Exception:
+        return ""
 
 
 def now_int() -> int:
+    """
+    Unix seconds timestamp.
+
+    Priority:
+    1. GenLayer transaction datetime from gl.message_raw["datetime"]
+    2. Runtime datetime fallback
+    3. time.time fallback
+    4. 0 only if all else fails
+    """
     try:
-        return int(gl.block.timestamp)
+        raw = str(gl.message_raw["datetime"]).strip()
+        parsed = parse_iso_to_unix_seconds(raw)
+        if parsed > 0:
+            return parsed
+    except Exception:
+        pass
+
+    try:
+        return int(datetime.now(timezone.utc).timestamp())
+    except Exception:
+        pass
+
+    try:
+        return int(time.time())
     except Exception:
         return 0
+
+
+def now_timestamp() -> str:
+    return str(now_int())
+
+
+def now_iso() -> str:
+    return tx_datetime_iso()
 
 
 def normalise_text(value: str) -> str:
@@ -437,7 +500,9 @@ class GenProofRegistry(gl.Contract):
             "total_rejected": 0,
             "total_manual_review": 0,
             "created_at": now_timestamp(),
+            "created_at_iso": now_iso(),
             "closed_at": "",
+            "closed_at_iso": "",
         }
 
         self.events[event_id] = to_json(event)
@@ -484,6 +549,7 @@ class GenProofRegistry(gl.Contract):
 
         event["status"] = "closed"
         event["closed_at"] = now_timestamp()
+        event["closed_at_iso"] = now_iso()
 
         self.events[event_id] = to_json(event)
 
@@ -579,7 +645,9 @@ class GenProofRegistry(gl.Contract):
             "verification_summary": "",
             "badge_id": "",
             "submitted_at": now_timestamp(),
+            "submitted_at_iso": now_iso(),
             "reviewed_at": "",
+            "reviewed_at_iso": "",
         }
 
         self.submissions[submission_id] = to_json(submission)
@@ -700,9 +768,6 @@ Return JSON in this exact shape:
         )
 
         def nondet() -> str:
-            # IMPORTANT:
-            # For prompt_non_comparative, return the prompt directly.
-            # Do not call gl.exec_prompt(prompt) here.
             return prompt
 
         result_raw = gl.eq_principle.prompt_non_comparative(
@@ -761,6 +826,7 @@ Return JSON in this exact shape:
         submission["risk_flags"] = risk_flags
         submission["verification_summary"] = verification_summary
         submission["reviewed_at"] = now_timestamp()
+        submission["reviewed_at_iso"] = now_iso()
 
         self.submissions[submission_id] = to_json(submission)
 
@@ -773,16 +839,14 @@ Return JSON in this exact shape:
 
         self.events[event_id] = to_json(event)
 
-        final_result = {
+        return to_json({
             "verdict": verdict,
             "score": score,
             "badge_level": badge_level,
             "reasons": reasons,
             "risk_flags": risk_flags,
             "verification_summary": verification_summary,
-        }
-
-        return to_json(final_result)
+        })
 
     # -----------------------------------------------------------------------
     # Badge issuing
@@ -826,12 +890,12 @@ Return JSON in this exact shape:
             "proof_hash": submission.get("proof_hash", ""),
             "soulbound": bool(event.get("soulbound", True)),
             "issued_at": now_timestamp(),
+            "issued_at_iso": now_iso(),
         }
 
         self.badges[badge_id] = to_json(badge)
         self.proof_hashes[badge_key] = badge_id
 
-        # User badge collation
         existing_user_badges = "[]"
         if attendee in self.user_badges:
             existing_user_badges = self.user_badges[attendee]
@@ -841,7 +905,6 @@ Return JSON in this exact shape:
             badge_id,
         )
 
-        # Event badge collation
         existing_event_badges = "[]"
         if event_id in self.event_badges:
             existing_event_badges = self.event_badges[event_id]
@@ -851,13 +914,11 @@ Return JSON in this exact shape:
             badge_id,
         )
 
-        # Platform-wide badge collation
         self.platform_badges["all"] = append_to_json_list(
             self.platform_badges["all"],
             badge_id,
         )
 
-        # Platform-wide user collation
         self.platform_users["all"] = append_unique_to_json_list(
             self.platform_users["all"],
             attendee,
@@ -911,6 +972,7 @@ Return JSON in this exact shape:
                 "reputation_points": 0,
                 "reputation_level": "Newcomer",
                 "last_updated": "",
+                "last_updated_iso": "",
             }
 
         profile["total_badges"] = int(profile.get("total_badges", 0)) + 1
@@ -935,6 +997,7 @@ Return JSON in this exact shape:
             int(profile.get("reputation_points", 0))
         )
         profile["last_updated"] = now_timestamp()
+        profile["last_updated_iso"] = now_iso()
 
         self.user_profiles[wallet] = to_json(profile)
 
@@ -958,6 +1021,7 @@ Return JSON in this exact shape:
                 "reputation_points": 0,
                 "reputation_level": "Newcomer",
                 "last_updated": "",
+                "last_updated_iso": "",
             })
 
         return self.user_profiles[wallet]
@@ -1022,6 +1086,7 @@ Return JSON in this exact shape:
 
         submission["reasons"] = existing_reasons
         submission["reviewed_at"] = now_timestamp()
+        submission["reviewed_at_iso"] = now_iso()
 
         self.submissions[submission_id] = to_json(submission)
 

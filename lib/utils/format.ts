@@ -59,6 +59,14 @@ export function normaliseTimestampToMs(
   const raw = String(value).trim();
   if (!raw || raw === "0") return 0;
 
+  // ISO 8601 string — the new contract emits these as `*_iso` fields
+  // (e.g. "2026-06-03T10:38:08.435770Z"). Try them first because Number()
+  // would coerce them to NaN.
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const ms = new Date(raw).getTime();
+    if (Number.isFinite(ms) && ms > 0) return ms;
+  }
+
   const n = Number(raw);
   if (!Number.isFinite(n)) return 0;
 
@@ -73,6 +81,21 @@ export function normaliseTimestampToMs(
 
   // Nanoseconds or larger
   return Math.floor(n / 1_000_000);
+}
+
+/**
+ * Prefer an ISO timestamp when present, fall back to the Unix variant.
+ * The new contract emits both `<field>` (Unix seconds) and `<field>_iso`
+ * (ISO 8601) for every chain-written time. Always pass ISO first.
+ *
+ * Use Unix variants for sorting/comparison; use ISO variants for display.
+ */
+export function pickChainDate(
+  iso: string | undefined | null,
+  unix: string | number | undefined | null
+): string | number | undefined | null {
+  if (typeof iso === "string" && iso.trim() && iso.trim() !== "0") return iso;
+  return unix;
 }
 
 /**
